@@ -5,8 +5,10 @@ use serde::{Deserialize, Serialize};
 use sqlx::query;
 
 #[derive(Deserialize)]
-pub struct MessageBody {
+pub struct PostBody {
     content: String,
+    background_url: Option<String>,
+    audio_url: Option<String>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -15,14 +17,13 @@ pub struct Claims {
     exp: usize,
 }
 
-pub async fn send_message(
+pub async fn create_post(
     State(state): State<DatabaseConnectStruct>,
     headers: HeaderMap,
-    Json(body): Json<MessageBody>,
+    Json(body): Json<PostBody>,
 ) -> Json<serde_json::Value> {
     let auth_header = headers.get("Authorization").unwrap();
     let token = &auth_header.to_str().unwrap()[7..];
-
     let claims = decode::<Claims>(
         token,
         &DecodingKey::from_secret(state.jwt_private_key.as_ref()),
@@ -36,12 +37,16 @@ pub async fn send_message(
         .await
         .unwrap();
 
-    query("INSERT INTO messages (user_id, content) VALUES ($1, $2)")
-        .bind(user.id)
-        .bind(&body.content)
-        .execute(&state.db)
-        .await
-        .unwrap();
+    query(
+        "INSERT INTO posts (user_id, content, background_url, audio_url) VALUES ($1, $2, $3, $4)",
+    )
+    .bind(user.id)
+    .bind(&body.content)
+    .bind(&body.background_url)
+    .bind(&body.audio_url)
+    .execute(&state.db)
+    .await
+    .unwrap();
 
     Json(serde_json::json!({ "success": true }))
 }

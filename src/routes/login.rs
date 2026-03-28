@@ -11,10 +11,13 @@ pub struct AccountLogin {
     password: String,
 }
 
+#[derive(sqlx::FromRow)]
 struct User {
     id: i32,
     username: String,
     password_hash: String,
+    avatar_url: Option<String>,
+    created_at: Option<chrono::DateTime<chrono::Utc>>,
 }
 
 #[derive(Serialize)]
@@ -29,7 +32,7 @@ pub async fn login(
 ) -> Json<serde_json::Value> {
     let user = query_as!(
         User,
-        "SELECT * FROM users WHERE username = $1",
+        "SELECT id, username, password_hash, avatar_url, created_at FROM users WHERE username = $1",
         account_struct.username
     )
     .fetch_one(&state.db)
@@ -37,7 +40,6 @@ pub async fn login(
     .unwrap();
 
     let is_valid = verify(&account_struct.password, &user.password_hash).unwrap();
-
     if !is_valid {
         return Json(serde_json::json!({ "error": "invalid credentials" }));
     }
