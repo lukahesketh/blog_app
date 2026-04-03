@@ -2,6 +2,7 @@ mod routes;
 use routes::axum_router;
 use sqlx::PgPool;
 use tokio::net::TcpListener;
+mod authextractor;
 
 #[derive(Clone)]
 struct DatabaseConnectStruct {
