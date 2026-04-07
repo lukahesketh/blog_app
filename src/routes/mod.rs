@@ -19,7 +19,7 @@ pub fn axum_router(state: DatabaseConnectStruct) -> Router {
         .route("/login", post(login))
         .route("/get_posts", get(get_posts))
         .route("/create_post", post(create_post))
-        .route("/like_post/:post_id", post(like_post))
+        .route("/like_post/", post(like_post))
         .layer(CorsLayer::permissive())
         .with_state(state)
 }

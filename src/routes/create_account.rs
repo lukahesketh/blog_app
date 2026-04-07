@@ -23,15 +23,17 @@ pub async fn create_account(
 ) -> Json<serde_json::Value> {
     let hashed_password = hash(&account.password, DEFAULT_COST).unwrap();
 
-    query("INSERT INTO users (username, password_hash) VALUES ($1, $2)")
-        .bind(&account.username)
-        .bind(&hashed_password)
-        .execute(&state.db)
-        .await
-        .unwrap();
+    let user = sqlx::query!(
+        "INSERT INTO users (username, password_hash) VALUES ($1, $2) RETURNING id",
+        &account.username,
+        &hashed_password
+    )
+    .fetch_one(&state.db)
+    .await
+    .unwrap();
 
     let claims = Claims {
-        sub: account.username,
+        sub: user.id.to_string(),
         exp: 9999999999,
     };
 

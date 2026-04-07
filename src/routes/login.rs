@@ -45,7 +45,7 @@ pub async fn login(
     }
 
     let claims = Claims {
-        sub: user.username,
+        sub: user.id.to_string(),
         exp: 9999999999,
     };
 
